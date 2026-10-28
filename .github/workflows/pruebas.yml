@@ -1,0 +1,38 @@
+# Integración continua: ejecuta las pruebas automatizadas en cada push y pull request.
+# Usa un MongoDB temporal en un contenedor, así que no necesita las credenciales de Atlas.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:8.0
+        ports:
+          - 27017:27017
+
+    env:
+      MONGODB_URI_TEST: mongodb://localhost:27017
+      JWT_SECRET: secreto-solo-para-ci
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar pruebas
+        run: npm test

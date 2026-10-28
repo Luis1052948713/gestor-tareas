@@ -1,0 +1,4 @@
+# Nunca subir secretos ni dependencias locales (Vercel instala las suyas)
+.env
+node_modules
+config-mongodb

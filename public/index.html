@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor de tareas</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234f46e5'/><path d='M7 12.5l3 3 7-7' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ============ Vista de acceso ============ -->
+  <main id="vista-auth" class="auth" hidden>
+    <section class="auth-intro">
+      <div class="logo grande"><span class="logo-icono"></span>Gestor de tareas</div>
+      <h1>Todo lo que tienes que hacer, en un solo lugar.</h1>
+      <ul class="beneficios">
+        <li><span class="punto"></span>Agrupa tus tareas por categorías</li>
+        <li><span class="punto"></span>Ponles fecha y mira qué vence hoy</li>
+        <li><span class="punto"></span>Marca lo terminado y sigue tu progreso</li>
+      </ul>
+    </section>
+
+    <section class="auth-card">
+      <div class="pestanas" role="tablist">
+        <button type="button" class="pestana activa" data-form="login" role="tab" aria-selected="true">Iniciar sesión</button>
+        <button type="button" class="pestana" data-form="registro" role="tab" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <form id="form-login" class="form" novalidate>
+        <h2>¡Hola de nuevo!</h2>
+        <label>Correo electrónico
+          <input type="email" name="email" autocomplete="email" placeholder="tu@correo.com" required>
+        </label>
+        <label>Contraseña
+          <span class="campo-pass">
+            <input type="password" name="password" autocomplete="current-password" required>
+            <button type="button" class="ver-pass" aria-label="Mostrar contraseña">Ver</button>
+          </span>
+        </label>
+        <p class="error" aria-live="polite"></p>
+        <button type="submit" class="btn primario ancho">Entrar</button>
+        <p class="cambiar">¿No tienes cuenta? <button type="button" class="enlace" data-ir="registro">Créala gratis</button></p>
+      </form>
+
+      <form id="form-registro" class="form" hidden novalidate>
+        <h2>Crea tu cuenta</h2>
+        <label>Nombre
+          <input type="text" name="nombre" autocomplete="name" placeholder="¿Cómo te llamas?" required maxlength="60">
+        </label>
+        <label>Correo electrónico
+          <input type="email" name="email" autocomplete="email" placeholder="tu@correo.com" required>
+        </label>
+        <label>Contraseña
+          <span class="campo-pass">
+            <input type="password" name="password" autocomplete="new-password" required minlength="6">
+            <button type="button" class="ver-pass" aria-label="Mostrar contraseña">Ver</button>
+          </span>
+          <small class="ayuda">Mínimo 6 caracteres</small>
+        </label>
+        <p class="error" aria-live="polite"></p>
+        <button type="submit" class="btn primario ancho">Crear cuenta</button>
+        <p class="cambiar">¿Ya tienes cuenta? <button type="button" class="enlace" data-ir="login">Inicia sesión</button></p>
+      </form>
+    </section>
+  </main>
+
+  <!-- ============ Vista principal ============ -->
+  <div id="vista-app" class="app" hidden>
+    <header class="barra">
+      <div class="logo"><span class="logo-icono"></span><span class="logo-texto">Gestor de tareas</span></div>
+      <label class="buscador">
+        <span class="icono" data-icono="buscar"></span>
+        <input type="search" id="buscar" placeholder="Buscar tareas…" aria-label="Buscar tareas">
+        <kbd>/</kbd>
+      </label>
+      <div class="usuario">
+        <span class="avatar" id="avatar"></span>
+        <span class="nombre" id="nombre-usuario"></span>
+        <button type="button" id="btn-salir" class="btn icono-btn" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <span class="icono" data-icono="salir"></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="contenido">
+      <nav class="lateral" aria-label="Vistas y categorías">
+        <ul id="lista-vistas" class="menu"></ul>
+        <h2>Categorías</h2>
+        <ul id="lista-categorias" class="menu"></ul>
+      </nav>
+
+      <main class="principal">
+        <div class="encabezado">
+          <div>
+            <h1 id="titulo-vista">Todas las tareas</h1>
+            <p id="resumen" class="resumen"></p>
+          </div>
+          <div class="progreso" id="progreso" hidden>
+            <div class="barra-progreso"><span id="barra-progreso"></span></div>
+            <span id="porcentaje"></span>
+          </div>
+        </div>
+
+        <form id="form-rapido" class="rapido" autocomplete="off">
+          <span class="icono" data-icono="mas"></span>
+          <input type="text" id="input-rapido" maxlength="120" placeholder="Agregar una tarea… (presiona Enter)" aria-label="Título de la nueva tarea">
+          <span id="destino-rapido" class="destino"></span>
+          <button type="button" id="btn-detalles" class="btn suave">Más detalles</button>
+          <button type="submit" class="btn primario">Agregar</button>
+        </form>
+
+        <div id="lista-tareas"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ Modal crear / editar ============ -->
+  <dialog id="modal-tarea" aria-labelledby="titulo-modal">
+    <form id="form-tarea" class="form" novalidate>
+      <div class="modal-cabecera">
+        <h2 id="titulo-modal">Nueva tarea</h2>
+        <button type="button" class="btn icono-btn" data-cerrar aria-label="Cerrar">&times;</button>
+      </div>
+
+      <label>¿Qué tienes que hacer?
+        <input type="text" name="titulo" required maxlength="120" placeholder="Ej: Entregar el informe">
+      </label>
+      <label><span>Descripción <small>(opcional)</small></span>
+        <textarea name="descripcion" rows="3" maxlength="1000" placeholder="Detalles, enlaces, notas…"></textarea>
+      </label>
+
+      <fieldset>
+        <legend>Categoría</legend>
+        <input type="text" name="categoria" maxlength="40" placeholder="General" aria-label="Categoría">
+        <div id="chips-categorias" class="chips"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Fecha de vencimiento</legend>
+        <div class="chips" id="chips-fecha">
+          <button type="button" class="chip" data-dias="0">Hoy</button>
+          <button type="button" class="chip" data-dias="1">Mañana</button>
+          <button type="button" class="chip" data-dias="7">En una semana</button>
+          <button type="button" class="chip" data-dias="">Sin fecha</button>
+        </div>
+        <input type="date" name="fechaVencimiento" aria-label="Fecha de vencimiento">
+      </fieldset>
+
+      <p class="error" aria-live="polite"></p>
+      <div class="acciones">
+        <button type="button" class="btn peligro" id="btn-eliminar-modal" hidden>Eliminar</button>
+        <span class="espacio"></span>
+        <button type="button" class="btn suave" data-cerrar>Cancelar</button>
+        <button type="submit" class="btn primario">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Notificaciones -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

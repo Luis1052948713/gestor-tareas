@@ -1,0 +1,25 @@
+{
+  "name": "gestor-tareas",
+  "version": "1.0.0",
+  "description": "Gestor de tareas con Node.js, Express y MongoDB - Trabajo final de Programación distribuida",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "probar-db": "node scripts/probar-conexion.js",
+    "test": "node --test --test-concurrency=1 --test-reporter=spec \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.1.4"
+  }
+}
