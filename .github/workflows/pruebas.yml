@@ -16,17 +16,24 @@ jobs:
         image: mongo:8.0
         ports:
           - 27017:27017
+        # Espera a que MongoDB responda antes de ejecutar las pruebas
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
 
     env:
-      MONGODB_URI_TEST: mongodb://localhost:27017
+      # 127.0.0.1 en lugar de "localhost": en Linux "localhost" puede resolverse como IPv6 (::1)
+      MONGODB_URI_TEST: mongodb://127.0.0.1:27017
       JWT_SECRET: secreto-solo-para-ci
 
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Instalar Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
