@@ -125,6 +125,14 @@ Pasos:
 
 Vercel muestra la URL pública (algo como `https://gestor-tareas-xxxx.vercel.app`).
 
+### Publicación automática desde GitHub
+
+El proyecto de Vercel está conectado al repositorio <https://github.com/Luis1052948713/gestor-tareas>:
+
+- Cada `git push` a la rama **`main`** publica automáticamente una nueva versión en producción.
+- Cada *pull request* genera una **versión de vista previa** con su propia URL, para revisar los cambios antes de fusionarlos.
+- Al mismo tiempo, GitHub Actions ejecuta las pruebas (`npm test`); si fallan, el commit aparece con ❌ en GitHub.
+
 ## Cómo se usa la interfaz
 
 - **Agregar rápido:** escribe en la barra superior y presiona Enter. Si estás dentro de una categoría o en la vista *Hoy*, la tarea se crea ahí. *Más detalles* abre el formulario completo.
