@@ -11,7 +11,7 @@ Aplicación web para gestionar tareas personales: registro e inicio de sesión d
 | Documento | Contenido |
 |---|---|
 | [1. Planificación y diseño](docs/01-planificacion-y-diseno.md) | Requisitos, arquitectura, diagramas de flujo y de secuencia, diseño de la base de datos, estructura de carpetas, decisiones de diseño y rendimiento |
-| [2. Pruebas](docs/02-pruebas.md) | 34 pruebas automatizadas, pruebas manuales de la interfaz, pruebas de despliegue, integración continua y problemas resueltos |
+| [2. Pruebas](docs/02-pruebas.md) | 48 pruebas automatizadas, pruebas manuales de la interfaz, pruebas de despliegue, integración continua y problemas resueltos |
 | [3. División de tareas](docs/03-division-de-tareas.md) | Responsables por área (3 integrantes), plan por etapas, flujo de trabajo con Git y comunicación |
 | [4. Sustentación, ética y privacidad](docs/04-sustentacion-y-etica.md) | Guion de la presentación, demostración en vivo, preguntas probables y medidas de privacidad |
 
@@ -133,6 +133,15 @@ El proyecto de Vercel está conectado al repositorio <https://github.com/Luis105
 - Cada *pull request* genera una **versión de vista previa** con su propia URL, para revisar los cambios antes de fusionarlos.
 - Al mismo tiempo, GitHub Actions ejecuta las pruebas (`npm test`); si fallan, el commit aparece con ❌ en GitHub.
 
+## Configurar el correo de verificación
+
+Al registrarse, cada persona recibe un código de 6 dígitos que vence en 15 minutos y admite 5 intentos. El envío usa SMTP; con Gmail:
+
+1. Activa la verificación en dos pasos de la cuenta y crea una **contraseña de aplicación** en <https://myaccount.google.com/apppasswords>.
+2. Agrega `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` y `CORREO_REMITENTE` (ver `.env.example`) a tu `.env` y a *Settings → Environment Variables* en Vercel.
+
+Sin `SMTP_HOST`, en local el código se muestra en la consola del servidor; en producción el registro responde con error. Las cuentas creadas antes de esta función siguen entrando sin verificar.
+
 ## Cómo se usa la interfaz
 
 - **Agregar rápido:** escribe en la barra superior y presiona Enter. Si estás dentro de una categoría o en la vista *Hoy*, la tarea se crea ahí. *Más detalles* abre el formulario completo.
@@ -153,10 +162,12 @@ Todas las rutas de `/api/tareas` requieren el encabezado `Authorization: Bearer 
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/api/auth/registro` | Crea un usuario. Cuerpo: `{ nombre, email, password }` |
-| POST | `/api/auth/login` | Inicia sesión. Cuerpo: `{ email, password }` |
+| POST | `/api/auth/verificar` | Activa la cuenta con el código del correo. Cuerpo: `{ email, codigo }` |
+| POST | `/api/auth/reenviar` | Envía un código nuevo (máximo uno por minuto). Cuerpo: `{ email }` |
+| POST | `/api/auth/login` | Inicia sesión. Cuerpo: `{ email, password }`. Responde 403 si falta verificar el correo |
 | GET | `/api/auth/yo` | Devuelve el usuario de la sesión actual |
 
-Ambas respuestas de registro/login devuelven `{ token, usuario }`.
+El registro devuelve `{ requiereVerificacion, usuario }`, sin token: el acceso se da al verificar el código. `verificar` y `login` devuelven `{ token, usuario }`.
 
 ### Tareas
 

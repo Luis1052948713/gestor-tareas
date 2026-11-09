@@ -51,6 +51,8 @@ const API = (() => {
     if (!res.ok) {
       const error = new Error(datos.error || `Error ${res.status}`);
       error.status = res.status;
+      error.codigo = datos.codigo;
+      error.email = datos.email;
       throw error;
     }
     return datos;
@@ -61,6 +63,10 @@ const API = (() => {
     setToken,
     /** Crea una cuenta. @param {{nombre: string, email: string, password: string}} datos */
     registro: (datos) => peticion('POST', '/auth/registro', datos),
+    /** Activa la cuenta con el código del correo. @param {{email: string, codigo: string}} datos */
+    verificar: (datos) => peticion('POST', '/auth/verificar', datos),
+    /** Pide un código nuevo. @param {string} email */
+    reenviarCodigo: (email) => peticion('POST', '/auth/reenviar', { email }),
     /** Inicia sesión. @param {{email: string, password: string}} datos */
     login: (datos) => peticion('POST', '/auth/login', datos),
     /** Devuelve el usuario de la sesión actual. */

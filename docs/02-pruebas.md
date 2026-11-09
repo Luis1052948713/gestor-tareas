@@ -2,7 +2,7 @@
 
 Las consideraciones del trabajo piden "probar cada característica para asegurarse de que funcione según lo previsto" y documentar esas pruebas. Se hicieron tres tipos:
 
-1. **Pruebas automatizadas de la API** (34 casos), que se ejecutan con un comando.
+1. **Pruebas automatizadas de la API** (48 casos), que se ejecutan con un comando.
 2. **Pruebas manuales de la interfaz** en el navegador (escritorio, celular y modo oscuro).
 3. **Pruebas de despliegue** contra la app publicada en Vercel y la base en Atlas.
 
@@ -20,7 +20,7 @@ npm test
 
 ### Casos y resultados
 
-Resultado de la última ejecución (27/10/2026, Node.js 22, MongoDB Atlas): **34 de 34 pruebas superadas, 0 fallidas.**
+Resultado de la última ejecución (09/11/2026, Node.js 22, MongoDB Atlas): **48 de 48 pruebas superadas, 0 fallidas.** Los correos se simulan: estas pruebas no comprueban la entrega real por SMTP.
 
 #### Autenticación (`test/auth.test.js`)
 
@@ -66,6 +66,25 @@ Resultado de la última ejecución (27/10/2026, Node.js 22, MongoDB Atlas): **34
 | 33 | Id inexistente o mal formado | 404 | ✅ |
 | 34 | **Privacidad:** otro usuario intenta ver, editar, completar o borrar | No ve nada y recibe 404; la tarea original queda intacta | ✅ |
 
+#### Verificación de correo (`test/verificacion.test.js`)
+
+| # | Caso | Resultado esperado | Estado |
+|---|---|---|---|
+| 35 | Código generado | 6 dígitos; en la BD solo hay un HMAC | ✅ |
+| 36 | Login sin verificar | 403 con la contraseña correcta; 401 con una incorrecta | ✅ |
+| 37 | Código correcto | Activa la cuenta, da token y borra el código | ✅ |
+| 38 | Código incorrecto | 400 sin token | ✅ |
+| 39 | Más de 5 intentos | El código queda invalidado aunque luego sea correcto | ✅ |
+| 40 | Código vencido | 400 | ✅ |
+| 41 | Reutilizar un código | 400 | ✅ |
+| 42 | Código de otra cuenta | 400 | ✅ |
+| 43 | Objetos de MongoDB como correo o código | 400; no se verifica nada | ✅ |
+| 44 | Reenvíos | Uno por minuto; el código nuevo reemplaza al anterior | ✅ |
+| 45 | Reenviar a un correo inexistente | Misma respuesta (no revela correos) | ✅ |
+| 46 | Registrar de nuevo un correo pendiente | Reemplaza la cuenta pendiente; la clave anterior deja de servir | ✅ |
+| 47 | Fallo al enviar el correo | 502 y la cuenta no queda creada | ✅ |
+| 48 | Cuenta anterior a esta función | Sigue entrando sin verificar | ✅ |
+
 Salida real de `npm test` (resumen):
 
 ```
@@ -78,8 +97,9 @@ Salida real de `npm test` (resumen):
   ✔ Listado y filtros (4 pruebas)
   ✔ Edición, completado y eliminación (6 pruebas)
   ✔ Privacidad entre usuarios (1 prueba)
-ℹ tests 34
-ℹ pass 34
+▶ Verificación de correo (14 pruebas)
+ℹ tests 48
+ℹ pass 48
 ℹ fail 0
 ```
 
@@ -105,6 +125,7 @@ Ejecutadas el 27/10/2026 y el 09/11/2026 en el navegador integrado de Claude Cod
 | M14 | Celular (375 px) | Vista móvil | Menú horizontal, sin desplazamiento lateral ✅ |
 | M15 | Modo oscuro | Sistema en modo oscuro | Colores oscuros legibles ✅ |
 | M16 | Cerrar sesión | Icono de salida | Vuelve a la pantalla de acceso ✅ |
+| M17 | Verificación de correo (código tomado de la consola local) | Registrarse → código corto o incorrecto → cerrar → iniciar sesión → código correcto | Muestra los errores, lleva a la pantalla del código y entra con el correcto ✅ |
 
 ## 2.3 Pruebas de despliegue
 

@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema(
       minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
       select: false, // nunca se devuelve en las consultas por defecto
     },
+    // Sin valor por defecto: las cuentas creadas antes de la verificación no tienen este
+    // campo y siguen entrando; solo las pendientes guardan `false`.
+    emailVerificado: Boolean,
+    // Datos del código pendiente (se guarda un HMAC, nunca el código en texto plano)
+    codigoHash: { type: String, select: false },
+    codigoExpira: { type: Date, select: false },
+    codigoIntentos: { type: Number, select: false },
+    codigoEnviadoEn: { type: Date, select: false },
   },
   { timestamps: true }
 );

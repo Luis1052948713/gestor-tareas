@@ -170,6 +170,10 @@ button { font: inherit; color: inherit; }
 .pestana { flex: 1; background: none; border: none; padding: 0.5rem; cursor: pointer; color: var(--texto-suave); border-radius: 7px; font-weight: 600; }
 .pestana.activa { background: var(--superficie); color: var(--texto); box-shadow: var(--sombra); }
 .cambiar { text-align: center; color: var(--texto-suave); font-size: 0.92rem; }
+.sub-verificacion { color: var(--texto-suave); font-size: 0.95rem; overflow-wrap: anywhere; }
+.sub-verificacion strong { color: var(--texto); }
+.form input.campo-codigo { text-align: center; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.4em; font-variant-numeric: tabular-nums; }
+.enlace:disabled { color: var(--texto-suave); cursor: default; text-decoration: none; }
 
 /* ---------- Barra superior ---------- */
 

@@ -74,8 +74,11 @@ flowchart TD
     H --> I[POST /api/auth/registro]
     I --> J{¿Datos válidos y correo libre?}
     J -- No --> K[Mostrar error] --> H
-    J -- Sí --> L[Servidor: hash bcrypt de la contraseña<br/>y guardar usuario]
-    L --> M[Generar JWT]
+    J -- Sí --> L[Servidor: hash bcrypt de la contraseña,<br/>guardar cuenta pendiente y enviar código]
+    L --> V[Escribe el código del correo]
+    V --> W{¿Código correcto y vigente?}
+    W -- No --> V
+    W -- Sí --> M[Generar JWT]
 
     G -- Sí --> N[Llena correo y contraseña]
     N --> O[POST /api/auth/login]
