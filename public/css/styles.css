@@ -173,6 +173,7 @@ button { font: inherit; color: inherit; }
 .sub-verificacion { color: var(--texto-suave); font-size: 0.95rem; overflow-wrap: anywhere; }
 .sub-verificacion strong { color: var(--texto); }
 .form input.campo-codigo { text-align: center; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.4em; font-variant-numeric: tabular-nums; }
+.olvido { text-align: right; font-size: 0.88rem; margin-top: -0.4rem; }
 .enlace:disabled { color: var(--texto-suave); cursor: default; text-decoration: none; }
 
 /* ---------- Barra superior ---------- */

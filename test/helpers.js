@@ -28,6 +28,7 @@ const enviarSimulado = async (email, nombre, codigo) => {
   buzon.set(email, codigo);
 };
 correo.enviarCodigoVerificacion = enviarSimulado;
+correo.enviarCodigoRecuperacion = enviarSimulado;
 
 /**
  * Vacía todas las colecciones de la base de pruebas (conserva los índices).

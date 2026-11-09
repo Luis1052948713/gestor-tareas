@@ -27,7 +27,7 @@ const CODIGO_INVALIDO = 'Código incorrecto o vencido. Revísalo o pide uno nuev
  * @returns {string} Token que expira según `JWT_EXPIRES_IN` (por defecto 7 días).
  */
 function generarToken(usuario) {
-  return jwt.sign({ id: usuario._id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id: usuario._id, sv: usuario.sesionVersion || 0 }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 }
@@ -188,6 +188,92 @@ router.post('/reenviar', async (req, res, next) => {
     }
 
     res.json({ mensaje: 'Si la cuenta está pendiente, enviamos un código nuevo.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/recuperar
+ * Envía un código para restablecer la contraseña. Cuerpo: `{ email }`.
+ * Responde siempre 200 con el mismo mensaje, para no revelar qué correos están registrados.
+ * Solo aplica a cuentas activas (las pendientes usan su código de verificación)
+ * y permite un envío por minuto para cada correo.
+ */
+router.post('/recuperar', async (req, res, next) => {
+  try {
+    const email = normalizarEmail(req.body.email);
+    const { codigo, campos } = nuevoCodigo(email);
+    const limite = new Date(Date.now() - SEGUNDOS_REENVIO * 1000);
+
+    const usuario = await User.findOneAndUpdate(
+      {
+        email,
+        emailVerificado: { $ne: false },
+        $or: [{ codigoEnviadoEn: { $exists: false } }, { codigoEnviadoEn: { $lte: limite } }],
+      },
+      { $set: campos },
+      { new: true }
+    );
+
+    if (usuario) {
+      await correo.enviarCodigoRecuperacion(email, usuario.nombre, codigo).catch((err) => {
+        console.error('No se pudo enviar el correo de recuperación:', err.message);
+      });
+    }
+
+    res.json({ mensaje: 'Si el correo está registrado, enviamos un código.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/restablecer
+ * Cambia la contraseña con el código recibido. Cuerpo: `{ email, codigo, password }`.
+ * Responde 200 o 400. Al cambiarla aumenta `sesionVersion`, lo que cierra las sesiones
+ * abiertas, incluida la de quien hubiera entrado con la contraseña anterior.
+ * Cada código admite 5 intentos, contados de forma atómica como en `/verificar`.
+ */
+router.post('/restablecer', async (req, res, next) => {
+  try {
+    const email = normalizarEmail(req.body.email);
+    const codigo = String(req.body.codigo || '').trim();
+    const password = String(req.body.password || '');
+
+    // Se valida antes de consumir un intento del código
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+
+    const usuario = await User.findOneAndUpdate(
+      {
+        email,
+        emailVerificado: { $ne: false },
+        codigoExpira: { $gt: new Date() },
+        codigoIntentos: { $lt: MAX_INTENTOS },
+      },
+      { $inc: { codigoIntentos: 1 } },
+      { new: true }
+    ).select('+codigoHash');
+
+    if (!usuario) return res.status(400).json({ error: CODIGO_INVALIDO });
+
+    const esperado = Buffer.from(usuario.codigoHash, 'hex');
+    const recibido = Buffer.from(hashCodigo(email, codigo), 'hex');
+    if (!crypto.timingSafeEqual(esperado, recibido)) {
+      return res.status(400).json({ error: CODIGO_INVALIDO });
+    }
+
+    usuario.password = password; // el hook pre('save') del modelo aplica el hash
+    usuario.sesionVersion = (usuario.sesionVersion || 0) + 1;
+    usuario.codigoHash = undefined;
+    usuario.codigoExpira = undefined;
+    usuario.codigoIntentos = undefined;
+    usuario.codigoEnviadoEn = undefined;
+    await usuario.save();
+
+    res.json({ mensaje: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
   } catch (err) {
     next(err);
   }

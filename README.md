@@ -11,7 +11,7 @@ Aplicación web para gestionar tareas personales: registro e inicio de sesión d
 | Documento | Contenido |
 |---|---|
 | [1. Planificación y diseño](docs/01-planificacion-y-diseno.md) | Requisitos, arquitectura, diagramas de flujo y de secuencia, diseño de la base de datos, estructura de carpetas, decisiones de diseño y rendimiento |
-| [2. Pruebas](docs/02-pruebas.md) | 48 pruebas automatizadas, pruebas manuales de la interfaz, pruebas de despliegue, integración continua y problemas resueltos |
+| [2. Pruebas](docs/02-pruebas.md) | 63 pruebas automatizadas, pruebas manuales de la interfaz, pruebas de despliegue, integración continua y problemas resueltos |
 | [3. División de tareas](docs/03-division-de-tareas.md) | Responsables por área (3 integrantes), plan por etapas, flujo de trabajo con Git y comunicación |
 | [4. Sustentación, ética y privacidad](docs/04-sustentacion-y-etica.md) | Guion de la presentación, demostración en vivo, preguntas probables y medidas de privacidad |
 
@@ -147,6 +147,7 @@ Sin `SMTP_HOST`, en local el código se muestra en la consola del servidor; en p
 - **Agregar rápido:** escribe en la barra superior y presiona Enter. Si estás dentro de una categoría o en la vista *Hoy*, la tarea se crea ahí. *Más detalles* abre el formulario completo.
 - **Vistas:** *Todas*, *Hoy*, *Próximos 7 días* y *Vencidas* (con contador en rojo). Debajo, las categorías con su color y sus pendientes.
 - **Completar:** clic en el círculo. Las completadas pasan a una sección plegable al final y la barra de progreso se actualiza.
+- **¿Olvidaste tu contraseña?:** en la pantalla de inicio de sesión. Llega un código de 6 dígitos al correo para crear una contraseña nueva; al cambiarla se cierran las sesiones abiertas en otros dispositivos.
 - **Editar:** clic en cualquier parte de la tarea o en el lápiz. En el formulario hay botones rápidos de categoría y de fecha (*Hoy*, *Mañana*, *En una semana*, *Sin fecha*).
 - **Eliminar y deshacer:** al eliminar o completar aparece un aviso con **Deshacer** durante 5 segundos.
 - **Buscar:** por título, descripción o categoría (sin importar mayúsculas ni tildes).
@@ -164,6 +165,8 @@ Todas las rutas de `/api/tareas` requieren el encabezado `Authorization: Bearer 
 | POST | `/api/auth/registro` | Crea un usuario. Cuerpo: `{ nombre, email, password }` |
 | POST | `/api/auth/verificar` | Activa la cuenta con el código del correo. Cuerpo: `{ email, codigo }` |
 | POST | `/api/auth/reenviar` | Envía un código nuevo (máximo uno por minuto). Cuerpo: `{ email }` |
+| POST | `/api/auth/recuperar` | Envía un código para restablecer la contraseña (máximo uno por minuto). Cuerpo: `{ email }` |
+| POST | `/api/auth/restablecer` | Cambia la contraseña con el código y cierra las sesiones abiertas. Cuerpo: `{ email, codigo, password }` |
 | POST | `/api/auth/login` | Inicia sesión. Cuerpo: `{ email, password }`. Responde 403 si falta verificar el correo |
 | GET | `/api/auth/yo` | Devuelve el usuario de la sesión actual |
 

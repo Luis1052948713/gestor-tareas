@@ -213,7 +213,7 @@ Se sigue el patrón **MVC adaptado a una API**: *modelos* (`models/`), *controla
 |---|---|---|
 | **Express** como framework | Fastify, NestJS | Es el sugerido en el enunciado, simple y muy documentado |
 | **MongoDB Atlas** | MongoDB local | No depende de la memoria del PC (tuvimos caídas por falta de RAM) y la app publicada puede acceder desde internet |
-| **JWT** en el encabezado `Authorization` | Sesiones con cookies | La API no guarda estado de sesión: funciona igual con varias instancias serverless en Vercel |
+| **JWT** en el encabezado `Authorization` | Sesiones con cookies | No hace falta un almacén de sesiones compartido entre las instancias serverless de Vercel. Cada petición consulta `sesionVersion` del usuario para poder invalidar los tokens al restablecer la contraseña |
 | **bcryptjs** (10 rondas) | Guardar la contraseña cifrada, SHA-256 | bcrypt es lento a propósito y agrega sal: resiste ataques de diccionario. Una contraseña cifrada podría descifrarse; un hash no |
 | Frontend **sin frameworks** | React, Vue | El enunciado pide HTML, CSS y JS; además se carga rápido sin compilar |
 | Construir el HTML con `createElement`/`textContent` | `innerHTML` | Evita inyección de código (XSS) con lo que escriben los usuarios |

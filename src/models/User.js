@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema(
     codigoExpira: { type: Date, select: false },
     codigoIntentos: { type: Number, select: false },
     codigoEnviadoEn: { type: Date, select: false },
+    // Aumenta al restablecer la contraseña: invalida los tokens emitidos antes
+    sesionVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

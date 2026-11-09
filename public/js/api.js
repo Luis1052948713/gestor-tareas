@@ -67,6 +67,10 @@ const API = (() => {
     verificar: (datos) => peticion('POST', '/auth/verificar', datos),
     /** Pide un código nuevo. @param {string} email */
     reenviarCodigo: (email) => peticion('POST', '/auth/reenviar', { email }),
+    /** Pide un código para restablecer la contraseña. @param {string} email */
+    recuperar: (email) => peticion('POST', '/auth/recuperar', { email }),
+    /** Cambia la contraseña con el código. @param {{email: string, codigo: string, password: string}} datos */
+    restablecer: (datos) => peticion('POST', '/auth/restablecer', datos),
     /** Inicia sesión. @param {{email: string, password: string}} datos */
     login: (datos) => peticion('POST', '/auth/login', datos),
     /** Devuelve el usuario de la sesión actual. */
