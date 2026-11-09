@@ -10,7 +10,7 @@ Todos los integrantes del CIPAS deben participar. Propuesta de reparto:
 | 1:30 – 4:00 | Arquitectura y diseño | Integrante 3 | Diagrama de arquitectura (navegador → Vercel → Atlas), por qué es distribuida, diseño de la base de datos |
 | 4:00 – 9:00 | **Demostración en vivo** | Integrante 1 | Ver la sección 4.2 |
 | 9:00 – 11:00 | Seguridad | Integrante 2 | Hash en Atlas, JWT, prueba de privacidad entre usuarios |
-| 11:00 – 13:00 | Pruebas e integración continua | Integrante 3 | Ejecutar `npm test` (34 pruebas en verde) y mostrar GitHub Actions |
+| 11:00 – 13:00 | Pruebas e integración continua | Integrante 3 | Ejecutar `npm test` (63 pruebas en verde) y mostrar GitHub Actions |
 | 13:00 – 14:30 | Desafíos superados y aprendizajes | Los tres | Tabla 2.5 de `docs/02-pruebas.md` |
 | 14:30 – 15:00 | Cierre y preguntas | Todos | — |
 
@@ -18,7 +18,7 @@ Todos los integrantes del CIPAS deben participar. Propuesta de reparto:
 
 Preparen antes: la app abierta en <https://gestor-tareas-omega-bice.vercel.app>, MongoDB Atlas (*Browse Collections*) en otra pestaña y una terminal en la carpeta del proyecto.
 
-1. **Registro:** crear una cuenta nueva. → Ir a Atlas, colección `users`: mostrar que la contraseña está guardada como `$2a$10$...` (hash), no en texto.
+1. **Registro:** crear una cuenta nueva con un correo real y escribir el código de 6 dígitos que llega por correo. → Ir a Atlas, colección `users`: mostrar que la contraseña está guardada como `$2a$10$...` (hash), no en texto.
 2. **Crear tareas rápido:** tecla `N`, escribir "Estudiar para el parcial", Enter. Crear 2–3 más.
 3. **Más detalles:** crear "Entregar trabajo final" con descripción, categoría *Universidad* y fecha *Mañana*.
 4. **Categorías:** mostrar el menú lateral con colores y contadores; entrar a *Universidad*.
@@ -37,7 +37,7 @@ Preparen antes: la app abierta en <https://gestor-tareas-omega-bice.vercel.app>,
 | Pregunta | Respuesta corta |
 |---|---|
 | ¿Qué es un hash y por qué no cifrar la contraseña? | Un hash es de una sola vía: no se puede "descifrar". Al iniciar sesión se calcula el hash de lo que escribe el usuario y se compara. bcrypt además agrega una *sal* aleatoria y es lento a propósito, para que probar millones de contraseñas sea impracticable. |
-| ¿Qué es un JWT? | Un token firmado por el servidor con el id del usuario. El navegador lo envía en cada petición; el servidor verifica la firma sin guardar sesiones. Expira a los 7 días. |
+| ¿Qué es un JWT? | Un token firmado por el servidor con el id del usuario. El navegador lo envía en cada petición; el servidor verifica la firma y que su versión de sesión siga vigente, lo que permite cerrar sesiones al restablecer la contraseña. Expira a los 7 días. |
 | ¿Qué pasa si alguien cambia el id de una tarea en la petición? | Toda consulta filtra por `usuario: req.usuarioId` (sacado del token), así que solo encuentra sus propias tareas; recibe 404. Lo comprueba la prueba #34. |
 | ¿Por qué MongoDB y no SQL? | Lo sugiere el enunciado; los documentos JSON encajan con JavaScript y con la forma de las tareas, y Mongoose agrega validación de esquema. |
 | ¿Qué hace Mongoose? | Es un ODM: define esquemas (campos, tipos, validaciones), convierte documentos en objetos de JavaScript y ofrece métodos como `find`, `create`, `save`. |
@@ -67,7 +67,7 @@ Las consideraciones piden una cultura ética y respeto por la privacidad. Medida
 - Las pruebas automatizadas usan una base separada (`gestor_tareas_test`) y se borraron los datos de prueba de la base real.
 
 **Limitaciones conocidas** (honestidad sobre lo que falta para un producto real)
-- No hay recuperación de contraseña ni verificación del correo.
+- Recuperar o reenviar un código tarda más cuando el correo existe, porque se envía el mensaje: esa diferencia de tiempo podría revelar qué correos están registrados. El registro también avisa si un correo ya existe.
 - El token se guarda en `localStorage`; en producción sería más seguro una cookie `httpOnly`.
 - No hay límite de intentos de inicio de sesión (se podría agregar `express-rate-limit`).
 - Atlas acepta conexiones desde cualquier IP (`0.0.0.0/0`) porque Vercel no tiene IP fija; la base sigue protegida por usuario y contraseña.

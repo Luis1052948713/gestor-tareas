@@ -38,6 +38,7 @@
             <button type="button" class="ver-pass" aria-label="Mostrar contraseña">Ver</button>
           </span>
         </label>
+        <p class="olvido"><button type="button" class="enlace" id="btn-olvido">¿Olvidaste tu contraseña?</button></p>
         <p class="error" aria-live="polite"></p>
         <button type="submit" class="btn primario ancho">Entrar</button>
         <p class="cambiar">¿No tienes cuenta? <button type="button" class="enlace" data-ir="registro">Créala gratis</button></p>
@@ -61,6 +62,49 @@
         <p class="error" aria-live="polite"></p>
         <button type="submit" class="btn primario ancho">Crear cuenta</button>
         <p class="cambiar">¿Ya tienes cuenta? <button type="button" class="enlace" data-ir="login">Inicia sesión</button></p>
+      </form>
+
+      <form id="form-verificacion" class="form" hidden novalidate>
+        <h2>Revisa tu correo</h2>
+        <p class="sub-verificacion">Enviamos un código de 6 dígitos a <strong id="email-verificacion"></strong>. Vence en 15 minutos; si no lo ves, revisa la carpeta de spam.</p>
+        <label>Código de verificación
+          <input type="text" name="codigo" class="campo-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+        </label>
+        <p class="error" aria-live="polite"></p>
+        <button type="submit" class="btn primario ancho">Verificar y entrar</button>
+        <p class="cambiar">
+          <button type="button" class="enlace" id="btn-reenviar">Reenviar código</button>
+          · <button type="button" class="enlace" data-ir="registro">Corregir mi correo</button>
+        </p>
+      </form>
+
+      <form id="form-recuperar" class="form" hidden novalidate>
+        <h2>Recupera tu contraseña</h2>
+        <p class="sub-verificacion">Escribe el correo de tu cuenta y te enviaremos un código de 6 dígitos.</p>
+        <label>Correo electrónico
+          <input type="email" name="email" autocomplete="email" placeholder="tu@correo.com" required>
+        </label>
+        <p class="error" aria-live="polite"></p>
+        <button type="submit" class="btn primario ancho">Enviar código</button>
+        <p class="cambiar"><button type="button" class="enlace" data-ir="login">Volver a iniciar sesión</button></p>
+      </form>
+
+      <form id="form-restablecer" class="form" hidden novalidate>
+        <h2>Crea una contraseña nueva</h2>
+        <p class="sub-verificacion">Si <strong id="email-restablecer"></strong> está registrado, te llegará un código que vence en 15 minutos. Revisa también la carpeta de spam.</p>
+        <label>Código
+          <input type="text" name="codigo" class="campo-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+        </label>
+        <label>Contraseña nueva
+          <span class="campo-pass">
+            <input type="password" name="password" autocomplete="new-password" required minlength="6">
+            <button type="button" class="ver-pass" aria-label="Mostrar contraseña">Ver</button>
+          </span>
+          <small class="ayuda">Mínimo 6 caracteres. Se cerrarán las sesiones abiertas en otros dispositivos.</small>
+        </label>
+        <p class="error" aria-live="polite"></p>
+        <button type="submit" class="btn primario ancho">Cambiar contraseña</button>
+        <p class="cambiar"><button type="button" class="enlace" data-ir="login">Volver a iniciar sesión</button></p>
       </form>
     </section>
   </main>

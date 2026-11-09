@@ -12,10 +12,11 @@ describe('Autenticación', () => {
   beforeEach(limpiarBD);
 
   describe('POST /api/auth/registro', () => {
-    it('registra un usuario y devuelve token y datos públicos', async () => {
+    it('registra un usuario y devuelve sus datos públicos, sin token hasta verificar', async () => {
       const { respuesta } = await registrarUsuario({ nombre: 'Ana', email: 'ana@prueba.test' });
       assert.equal(respuesta.status, 201);
-      assert.ok(respuesta.body.token, 'debe devolver un token');
+      assert.equal(respuesta.body.requiereVerificacion, true);
+      assert.equal(respuesta.body.token, undefined, 'no debe dar acceso antes de verificar');
       assert.equal(respuesta.body.usuario.nombre, 'Ana');
       assert.equal(respuesta.body.usuario.email, 'ana@prueba.test');
       assert.equal(respuesta.body.usuario.password, undefined, 'nunca debe devolver la contraseña');

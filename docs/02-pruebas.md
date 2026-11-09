@@ -2,7 +2,7 @@
 
 Las consideraciones del trabajo piden "probar cada característica para asegurarse de que funcione según lo previsto" y documentar esas pruebas. Se hicieron tres tipos:
 
-1. **Pruebas automatizadas de la API** (34 casos), que se ejecutan con un comando.
+1. **Pruebas automatizadas de la API** (63 casos), que se ejecutan con un comando.
 2. **Pruebas manuales de la interfaz** en el navegador (escritorio, celular y modo oscuro).
 3. **Pruebas de despliegue** contra la app publicada en Vercel y la base en Atlas.
 
@@ -20,7 +20,7 @@ npm test
 
 ### Casos y resultados
 
-Resultado de la última ejecución (27/10/2026, Node.js 22, MongoDB Atlas): **34 de 34 pruebas superadas, 0 fallidas.**
+Resultado de la última ejecución (09/11/2026, Node.js 22, MongoDB Atlas): **63 de 63 pruebas superadas, 0 fallidas.** Los correos se simulan: estas pruebas no comprueban la entrega real por SMTP.
 
 #### Autenticación (`test/auth.test.js`)
 
@@ -66,6 +66,45 @@ Resultado de la última ejecución (27/10/2026, Node.js 22, MongoDB Atlas): **34
 | 33 | Id inexistente o mal formado | 404 | ✅ |
 | 34 | **Privacidad:** otro usuario intenta ver, editar, completar o borrar | No ve nada y recibe 404; la tarea original queda intacta | ✅ |
 
+#### Verificación de correo (`test/verificacion.test.js`)
+
+| # | Caso | Resultado esperado | Estado |
+|---|---|---|---|
+| 35 | Código generado | 6 dígitos; en la BD solo hay un HMAC | ✅ |
+| 36 | Login sin verificar | 403 con la contraseña correcta; 401 con una incorrecta | ✅ |
+| 37 | Código correcto | Activa la cuenta, da token y borra el código | ✅ |
+| 38 | Código incorrecto | 400 sin token | ✅ |
+| 39 | Más de 5 intentos | El código queda invalidado aunque luego sea correcto | ✅ |
+| 40 | Código vencido | 400 | ✅ |
+| 41 | Reutilizar un código | 400 | ✅ |
+| 42 | Código de otra cuenta | 400 | ✅ |
+| 43 | Objetos de MongoDB como correo o código | 400; no se verifica nada | ✅ |
+| 44 | Reenvíos | Uno por minuto; el código nuevo reemplaza al anterior | ✅ |
+| 45 | Reenviar a un correo inexistente | Misma respuesta (no revela correos) | ✅ |
+| 46 | Registrar de nuevo un correo pendiente | Reemplaza la cuenta pendiente; la clave anterior deja de servir | ✅ |
+| 47 | Fallo al enviar el correo | 502 y la cuenta no queda creada | ✅ |
+| 48 | Cuenta anterior a esta función | Sigue entrando sin verificar | ✅ |
+
+#### Recuperación de contraseña (`test/recuperacion.test.js`)
+
+| # | Caso | Resultado esperado | Estado |
+|---|---|---|---|
+| 49 | Código correcto | Cambia la contraseña; la anterior deja de servir | ✅ |
+| 50 | Contraseña nueva | Se guarda con hash y se borra el código | ✅ |
+| 51 | Sesiones abiertas | El token anterior recibe 401 tras el cambio | ✅ |
+| 52 | Pedir un código sin usarlo | La contraseña y la sesión siguen igual | ✅ |
+| 53 | Correo inexistente | Misma respuesta (no revela correos) | ✅ |
+| 54 | Código incorrecto | 400; la contraseña no cambia | ✅ |
+| 55 | Más de 5 intentos | El código queda invalidado aunque luego sea correcto | ✅ |
+| 56 | Código vencido | 400 | ✅ |
+| 57 | Reutilizar un código | 400 | ✅ |
+| 58 | Contraseña corta | 400 sin gastar un intento | ✅ |
+| 59 | Reenvíos | Uno por minuto | ✅ |
+| 60 | Cuenta pendiente de verificar | No recibe código de recuperación | ✅ |
+| 61 | Objetos de MongoDB como correo o código | 400; la contraseña no cambia | ✅ |
+| 62 | Cuenta anterior a la verificación | Puede recuperar la contraseña | ✅ |
+| 63 | Fallo al enviar el correo | Misma respuesta; la contraseña no cambia | ✅ |
+
 Salida real de `npm test` (resumen):
 
 ```
@@ -78,8 +117,10 @@ Salida real de `npm test` (resumen):
   ✔ Listado y filtros (4 pruebas)
   ✔ Edición, completado y eliminación (6 pruebas)
   ✔ Privacidad entre usuarios (1 prueba)
-ℹ tests 34
-ℹ pass 34
+▶ Verificación de correo (14 pruebas)
+▶ Recuperación de contraseña (15 pruebas)
+ℹ tests 63
+ℹ pass 63
 ℹ fail 0
 ```
 
@@ -105,6 +146,8 @@ Ejecutadas el 27/10/2026 y el 09/11/2026 en el navegador integrado de Claude Cod
 | M14 | Celular (375 px) | Vista móvil | Menú horizontal, sin desplazamiento lateral ✅ |
 | M15 | Modo oscuro | Sistema en modo oscuro | Colores oscuros legibles ✅ |
 | M16 | Cerrar sesión | Icono de salida | Vuelve a la pantalla de acceso ✅ |
+| M18 | Recuperar contraseña (código tomado de la consola local) | "¿Olvidaste tu contraseña?" → correo → código y contraseña inválidos → datos correctos → iniciar sesión | Muestra los errores, vuelve al inicio de sesión, la contraseña vieja falla, la nueva entra y el token anterior recibe 401 ✅ |
+| M17 | Verificación de correo (código tomado de la consola local) | Registrarse → código corto o incorrecto → cerrar → iniciar sesión → código correcto | Muestra los errores, lleva a la pantalla del código y entra con el correcto ✅ |
 
 ## 2.3 Pruebas de despliegue
 

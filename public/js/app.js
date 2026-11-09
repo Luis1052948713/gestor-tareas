@@ -14,7 +14,10 @@ const estado = {
   busqueda: '',
   editando: null, // tarea abierta en el modal
   verCompletadas: false,
+  emailPendiente: null, // correo de la cuenta que falta verificar
 };
+
+let temporizadorReenvio;
 
 // ---------- Iconos (SVG fijos, nunca contienen datos del usuario) ----------
 
@@ -232,7 +235,62 @@ function mostrarFormulario(cual) {
   });
   $('#form-login').hidden = cual !== 'login';
   $('#form-registro').hidden = cual !== 'registro';
+  $('#form-verificacion').hidden = true;
+  $('#form-recuperar').hidden = true;
+  $('#form-restablecer').hidden = true;
+  $('.pestanas').hidden = false;
   $(`#form-${cual} input`).focus();
+}
+
+/**
+ * Muestra uno de los pasos de recuperación de contraseña, sin las pestañas de acceso.
+ * @param {'recuperar'|'restablecer'} paso - Formulario a mostrar.
+ */
+function mostrarRecuperacion(paso) {
+  $('.pestanas').hidden = true;
+  for (const nombre of ['login', 'registro', 'verificacion', 'recuperar', 'restablecer']) {
+    $(`#form-${nombre}`).hidden = nombre !== paso;
+  }
+  const form = $(`#form-${paso}`);
+  mostrarError(form, '');
+  form.querySelector('input').focus();
+}
+
+/**
+ * Muestra la pantalla para escribir el código enviado por correo.
+ * @param {string} email - Correo de la cuenta pendiente.
+ */
+function mostrarVerificacion(email) {
+  estado.emailPendiente = email;
+  $('#email-verificacion').textContent = email;
+  $('.pestanas').hidden = true;
+  $('#form-login').hidden = true;
+  $('#form-registro').hidden = true;
+  const form = $('#form-verificacion');
+  form.reset();
+  mostrarError(form, '');
+  form.hidden = false;
+  form.codigo.focus();
+}
+
+/**
+ * Desactiva el botón de reenviar durante la espera entre envíos y muestra la cuenta atrás.
+ * @param {number} [segundos=60] - Segundos de espera.
+ */
+function esperarReenvio(segundos = 60) {
+  const boton = $('#btn-reenviar');
+  clearInterval(temporizadorReenvio);
+  let restantes = segundos;
+  const pintar = () => {
+    boton.disabled = restantes > 0;
+    boton.textContent = restantes > 0 ? `Reenviar código (${restantes} s)` : 'Reenviar código';
+  };
+  pintar();
+  temporizadorReenvio = setInterval(() => {
+    restantes -= 1;
+    pintar();
+    if (restantes <= 0) clearInterval(temporizadorReenvio);
+  }, 1000);
 }
 
 $$('.pestana').forEach((b) => b.addEventListener('click', () => mostrarFormulario(b.dataset.form)));
@@ -266,12 +324,22 @@ async function manejarAuth(evento, accion) {
   const boton = form.querySelector('button[type=submit]');
   boton.disabled = true;
   try {
-    const { token, usuario } = await accion(datos);
-    API.setToken(token);
+    const { token, usuario, requiereVerificacion } = await accion(datos);
     form.reset();
+    if (requiereVerificacion) {
+      mostrarVerificacion(usuario.email);
+      esperarReenvio();
+      return;
+    }
+    API.setToken(token);
     await entrar(usuario);
   } catch (err) {
-    mostrarError(form, err.message);
+    if (err.codigo === 'EMAIL_NO_VERIFICADO') {
+      form.reset();
+      mostrarVerificacion(err.email);
+    } else {
+      mostrarError(form, err.message);
+    }
   } finally {
     boton.disabled = false;
   }
@@ -279,6 +347,104 @@ async function manejarAuth(evento, accion) {
 
 $('#form-login').addEventListener('submit', (e) => manejarAuth(e, API.login));
 $('#form-registro').addEventListener('submit', (e) => manejarAuth(e, API.registro));
+
+$('#form-verificacion').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  mostrarError(form, '');
+  const codigo = form.codigo.value.trim();
+  if (!/^\d{6}$/.test(codigo)) {
+    mostrarError(form, 'Escribe los 6 dígitos del código');
+    return;
+  }
+  const boton = form.querySelector('button[type=submit]');
+  boton.disabled = true;
+  try {
+    const { token, usuario } = await API.verificar({ email: estado.emailPendiente, codigo });
+    API.setToken(token);
+    form.reset();
+    await entrar(usuario);
+    toast('¡Correo verificado! Bienvenido.');
+  } catch (err) {
+    mostrarError(form, err.message);
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+$('#btn-olvido').addEventListener('click', () => {
+  const formRecuperar = $('#form-recuperar');
+  formRecuperar.email.value = $('#form-login').email.value;
+  mostrarRecuperacion('recuperar');
+});
+
+$('#form-recuperar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  mostrarError(form, '');
+  const email = form.email.value.trim();
+  if (!email) {
+    mostrarError(form, 'Escribe tu correo');
+    return;
+  }
+  const boton = form.querySelector('button[type=submit]');
+  boton.disabled = true;
+  try {
+    await API.recuperar(email);
+    estado.emailPendiente = email;
+    $('#email-restablecer').textContent = email;
+    $('#form-restablecer').reset();
+    mostrarRecuperacion('restablecer');
+  } catch (err) {
+    mostrarError(form, err.message);
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+$('#form-restablecer').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  mostrarError(form, '');
+  const codigo = form.codigo.value.trim();
+  const password = form.password.value;
+  if (!/^\d{6}$/.test(codigo)) {
+    mostrarError(form, 'Escribe los 6 dígitos del código');
+    return;
+  }
+  if (password.length < 6) {
+    mostrarError(form, 'La contraseña debe tener al menos 6 caracteres');
+    return;
+  }
+  const boton = form.querySelector('button[type=submit]');
+  boton.disabled = true;
+  try {
+    const { mensaje } = await API.restablecer({ email: estado.emailPendiente, codigo, password });
+    form.reset();
+    const formLogin = $('#form-login');
+    formLogin.reset();
+    formLogin.email.value = estado.emailPendiente;
+    mostrarFormulario('login');
+    formLogin.password.focus();
+    toast(mensaje);
+  } catch (err) {
+    mostrarError(form, err.message);
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+$('#btn-reenviar').addEventListener('click', async () => {
+  const form = $('#form-verificacion');
+  mostrarError(form, '');
+  esperarReenvio();
+  try {
+    const { mensaje } = await API.reenviarCodigo(estado.emailPendiente);
+    toast(mensaje);
+  } catch (err) {
+    mostrarError(form, err.message);
+  }
+});
 
 /**
  * Borra el token y vuelve a la pantalla de acceso.
