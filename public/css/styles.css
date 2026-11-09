@@ -121,6 +121,8 @@ button { font: inherit; color: inherit; }
 
 .campo-pass { position: relative; display: block; }
 .campo-pass input { padding-right: 4.5rem; }
+/* Edge agrega su propio botón para ver la contraseña; ya tenemos "Ver" */
+.campo-pass input::-ms-reveal, .campo-pass input::-ms-clear { display: none; }
 .ver-pass {
   position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%);
   background: none; border: none; color: var(--primario); font-size: 0.85rem; font-weight: 600;
