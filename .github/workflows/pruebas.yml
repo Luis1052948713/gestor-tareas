@@ -9,7 +9,8 @@ on:
 
 jobs:
   pruebas:
-    runs-on: ubuntu-latest
+    # No usar ubuntu-latest: MongoDB 8.0 no arranca en kernels Linux 6.19 o superiores (SERVER-121912)
+    runs-on: ubuntu-24.04
 
     services:
       mongodb:
