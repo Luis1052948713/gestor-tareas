@@ -131,5 +131,5 @@ El archivo `.github/workflows/pruebas.yml` hace que **GitHub Actions ejecute `np
 | `bad auth: authentication failed` | La contraseña del usuario de Atlas no coincidía | Se restableció la contraseña en *Database Access* |
 | La app arrancaba con la base local | Leía otro `.env` según la carpeta desde la que se iniciaba | `dotenv` carga siempre el `.env` junto al código |
 | Página principal con error 500 en Vercel | Vercel enviaba `/` al servidor Express | `vercel.json` sirve `public/` como estático y solo `/api` va a la función |
-| GitHub Actions falló sin llegar a ejecutar las pruebas (`Failed to initialize container mongo:8.0`) | MongoDB 8.0 no arranca en kernels Linux 6.19 o superiores (SERVER-121912), y `ubuntu-latest` empezó a migrar a una versión nueva de Ubuntu | Fijar el workflow en `ubuntu-24.04` |
+| GitHub Actions falló sin llegar a ejecutar las pruebas (`Failed to initialize container mongo:8.0`) | MongoDB 8.0 no arranca en kernels Linux 6.19 o superiores (SERVER-121912), y los servidores de GitHub ya usan un kernel afectado. Fijar `ubuntu-24.04` no lo resolvió | Usar `mongo:7.0` solo para la base temporal de las pruebas; es una solución temporal hasta que MongoDB 8.x vuelva a arrancar allí |
 | Aparecía el texto "null" en la interfaz | `replaceChildren(null)` inserta la palabra "null" | Filtrar los valores vacíos antes de insertarlos |
