@@ -85,7 +85,7 @@ Salida real de `npm test` (resumen):
 
 ## 2.2 Pruebas manuales de la interfaz
 
-Realizadas en el navegador con la app conectada a la base de datos.
+Ejecutadas el 27/10/2026 y el 09/11/2026 en el navegador integrado de Claude Code, con la app en local y, en la segunda fecha, conectada a la base `gestor_tareas_test`. Las hizo la herramienta de automatización, unas con clics y otras con scripts en la página; la fila M14 se revisó con un viewport emulado de 375 px, no en un teléfono real. Antes de la sustentación conviene repetirlas a mano en el navegador y en un celular de verdad.
 
 | # | Prueba | Pasos | Resultado |
 |---|---|---|---|

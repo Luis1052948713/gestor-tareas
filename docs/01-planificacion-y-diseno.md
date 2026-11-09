@@ -217,7 +217,7 @@ Se sigue el patrón **MVC adaptado a una API**: *modelos* (`models/`), *controla
 | Filtrado y búsqueda **en el navegador** | Pedir al servidor en cada filtro | Las tareas de un usuario ya están cargadas; filtrar localmente es instantáneo y ahorra peticiones |
 | **Actualización optimista** al completar/eliminar | Esperar la respuesta | La interfaz responde de inmediato; si el servidor falla se revierte |
 | **Vercel** (serverless) | Render, Railway, VPS | Gratuito, despliegue con un comando y HTTPS automático |
-| Conexión a MongoDB **reutilizable** | Conectar en cada petición | Abrir una conexión a Atlas tarda ~1 s; reutilizarla mantiene rápidas las respuestas |
+| Conexión a MongoDB **reutilizable** | Conectar en cada petición | Abrir una conexión a Atlas es costoso; reutilizarla evita repetir ese trabajo en cada petición |
 | DNS públicos de respaldo | — | En algunos Windows Node no resolvía `mongodb+srv://`; la app lo detecta y reintenta |
 
 ## 1.7 Rendimiento
