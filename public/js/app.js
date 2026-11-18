@@ -175,7 +175,7 @@ function mostrarError(form, mensaje) {
 
 let temporizadorToast;
 /**
- * Muestra una notificación temporal (5 s), opcionalmente con un botón como "Deshacer".
+ * Muestra una notificación temporal (7 s), opcionalmente con un botón como "Deshacer".
  * @param {string} mensaje - Texto a mostrar.
  * @param {{accion?: string, alPulsar?: Function, error?: boolean}} [opciones]
  * @example toast('Tarea eliminada', { accion: 'Deshacer', alPulsar: restaurar })
@@ -189,7 +189,26 @@ function toast(mensaje, { accion, alPulsar, error } = {}) {
   ].filter(Boolean));
   t.classList.toggle('error', Boolean(error));
   t.classList.add('visible');
-  temporizadorToast = setTimeout(ocultarToast, 5000);
+  temporizadorToast = setTimeout(ocultarToast, 7000);
+}
+
+/**
+ * Cambia el texto de un botón mientras espera al servidor y lo restaura después.
+ * Así la persona sabe que su acción se está procesando (visibilidad del estado del sistema).
+ * @param {HTMLButtonElement} boton
+ * @param {string} texto - Texto mientras espera, p. ej. "Entrando…".
+ * @returns {Function} Llamarla restaura el botón.
+ */
+function botonOcupado(boton, texto) {
+  const original = boton.textContent;
+  boton.disabled = true;
+  boton.setAttribute('aria-busy', 'true');
+  boton.textContent = texto;
+  return () => {
+    boton.disabled = false;
+    boton.removeAttribute('aria-busy');
+    boton.textContent = original;
+  };
 }
 
 /**
@@ -321,8 +340,11 @@ async function manejarAuth(evento, accion) {
     mostrarError(form, 'Completa todos los campos');
     return;
   }
-  const boton = form.querySelector('button[type=submit]');
-  boton.disabled = true;
+  if (form.id === 'form-registro' && !validarRegistro()) {
+    mostrarError(form, 'Revisa los requisitos marcados en rojo');
+    return;
+  }
+  const restaurar = botonOcupado(form.querySelector('button[type=submit]'), form.id === 'form-registro' ? 'Creando tu cuenta…' : 'Entrando…');
   try {
     const { token, usuario, requiereVerificacion } = await accion(datos);
     form.reset();
@@ -341,9 +363,37 @@ async function manejarAuth(evento, accion) {
       mostrarError(form, err.message);
     }
   } finally {
-    boton.disabled = false;
+    restaurar();
   }
 }
+
+/**
+ * Revisa los datos del registro mientras se escriben y marca cada requisito como cumplido
+ * o pendiente (prevención de errores: la persona ve qué falta antes de enviar).
+ * @param {boolean} [mostrarFallos=true] - Si marca en rojo los requisitos no cumplidos.
+ * @returns {boolean} `true` si se cumplen todos.
+ */
+function validarRegistro(mostrarFallos = true) {
+  const f = $('#form-registro');
+  const cumple = {
+    nombre: f.nombre.value.trim().length > 0,
+    email: /^\S+@\S+\.\S+$/.test(f.email.value.trim()),
+    password: f.password.value.length >= 6,
+  };
+  for (const [req, ok] of Object.entries(cumple)) {
+    const li = $(`#requisitos-registro [data-req="${req}"]`);
+    li.classList.toggle('ok', ok);
+    li.classList.toggle('falta', !ok && mostrarFallos);
+    f[req].setAttribute('aria-invalid', String(!ok && mostrarFallos));
+  }
+  return Object.values(cumple).every(Boolean);
+}
+
+// Mientras escribe: marca lo cumplido; los fallos solo se pintan al salir del campo
+$('#form-registro').addEventListener('input', () => validarRegistro(false));
+$('#form-registro').addEventListener('focusout', (e) => {
+  if (e.target.matches('input') && e.target.value) validarRegistro(true);
+});
 
 $('#form-login').addEventListener('submit', (e) => manejarAuth(e, API.login));
 $('#form-registro').addEventListener('submit', (e) => manejarAuth(e, API.registro));
@@ -479,6 +529,11 @@ async function entrar(usuario) {
  * @returns {Promise<void>}
  */
 async function cargar() {
+  // Esqueleto de carga mientras llegan los datos (la pantalla nunca queda en blanco)
+  if (!estado.tareas.length) {
+    $('#lista-tareas').replaceChildren(el('ul', { class: 'tareas esqueleto', 'aria-label': 'Cargando tus tareas' },
+      [1, 2, 3].map(() => el('li', { class: 'tarea' }, el('span', { class: 'linea' }), el('span', { class: 'linea corta' })))));
+  }
   try {
     estado.tareas = await API.listarTareas();
     render();
@@ -622,6 +677,16 @@ function renderPrincipal() {
     estado.vista === 'hoy' ? el('span', { class: 'chip-fecha hoy' }, 'Hoy') : null,
   ].filter(Boolean));
 
+  // Aviso de tareas vencidas: resalta lo urgente sin que la persona tenga que buscarlo
+  const vencidas = estado.tareas.filter(VISTAS.vencidas.filtro).length;
+  const aviso = $('#aviso-vencidas');
+  aviso.hidden = !vencidas || estado.vista === 'vencidas';
+  aviso.replaceChildren(...(aviso.hidden ? [] : [
+    icono('vencidas'),
+    el('p', {}, el('b', {}, `Tienes ${vencidas} tarea${vencidas === 1 ? '' : 's'} vencida${vencidas === 1 ? '' : 's'}.`), ' Revísalas para ponerte al día.'),
+    el('button', { type: 'button', class: 'btn', onclick: () => { Object.assign(estado, { vista: 'vencidas', categoria: '' }); render(); } }, 'Ver vencidas'),
+  ]));
+
   const contenedor = $('#lista-tareas');
 
   if (!total) {
@@ -674,6 +739,22 @@ function renderPrincipal() {
  * @returns {HTMLDivElement}
  */
 function estadoVacio() {
+  // Primera vez: guía de bienvenida en lugar de una pantalla vacía
+  if (!estado.tareas.length && !estado.busqueda) {
+    const nombre = (estado.usuario?.nombre || '').trim().split(/\s+/)[0];
+    const paso = (n, titulo, texto) => el('li', {},
+      el('span', { class: 'numero-paso' }, String(n)),
+      el('div', {}, el('b', {}, titulo), el('p', {}, texto)));
+    return el('section', { class: 'bienvenida', 'aria-labelledby': 'titulo-bienvenida' },
+      el('h2', { id: 'titulo-bienvenida' }, `¡Hola${nombre ? `, ${nombre}` : ''}! Empecemos en 3 pasos`),
+      el('ol', { class: 'pasos' },
+        paso(1, 'Escribe una tarea', 'En la barra de arriba, y presiona Enter.'),
+        paso(2, 'Dale una categoría y fecha', 'Con “Más detalles”, si quieres organizarla.'),
+        paso(3, 'Márcala al terminar', 'Pulsa el círculo y mira cómo avanza tu progreso.')),
+      el('div', { class: 'acciones-bienvenida' },
+        el('button', { type: 'button', class: 'btn primario', onclick: () => inputRapido.focus() }, 'Escribir mi primera tarea'),
+        el('button', { type: 'button', class: 'btn suave', onclick: abrirAyuda }, 'Ver cómo funciona')));
+  }
   let titulo = 'Aún no tienes tareas';
   let texto = 'Escribe arriba lo que tienes que hacer y presiona Enter. ¡Así de fácil!';
   if (estado.busqueda) {
@@ -804,6 +885,7 @@ $('#form-rapido').addEventListener('submit', async (e) => {
       $('#buscar').value = '';
     }
     render();
+    toast(`Tarea agregada en ${tarea.categoria}`);
   } catch (err) {
     manejarErrorApi(err);
   }
@@ -901,8 +983,7 @@ formTarea.addEventListener('submit', async (e) => {
     formTarea.titulo.focus();
     return;
   }
-  const boton = formTarea.querySelector('button[type=submit]');
-  boton.disabled = true;
+  const restaurar = botonOcupado(formTarea.querySelector('button[type=submit]'), 'Guardando…');
   try {
     if (estado.editando) {
       Object.assign(estado.editando, await API.editarTarea(estado.editando._id, datos));
@@ -918,14 +999,56 @@ formTarea.addEventListener('submit', async (e) => {
     if (err.status === 401) manejarErrorApi(err);
     else mostrarError(formTarea, err.message);
   } finally {
-    boton.disabled = false;
+    restaurar();
   }
 });
+
+// ---------- Ayuda ----------
+
+const modalAyuda = $('#modal-ayuda');
+
+/** Abre la ventana de ayuda con los pasos de uso y los atajos de teclado. */
+function abrirAyuda() {
+  modalAyuda.showModal();
+  modalAyuda.querySelector('.btn.primario').focus();
+}
+
+$('#btn-ayuda').addEventListener('click', abrirAyuda);
+$$('[data-cerrar-ayuda]').forEach((b) => b.addEventListener('click', () => modalAyuda.close()));
+modalAyuda.addEventListener('click', (e) => { if (e.target === modalAyuda) modalAyuda.close(); });
+
+// ---------- Tamaño del texto ----------
+
+const TAMANOS = [{ nombre: 'Pequeño', escala: '93.75%' }, { nombre: 'Normal', escala: '100%' }, { nombre: 'Grande', escala: '112.5%' }, { nombre: 'Muy grande', escala: '125%' }];
+const CLAVE_TAMANO = 'gestor_tamano_texto';
+
+/**
+ * Aplica un tamaño de texto a toda la página y lo recuerda para la próxima visita.
+ * @param {number} indice - Posición en TAMANOS.
+ * @param {boolean} [avisar] - Si muestra un aviso con el tamaño elegido.
+ */
+function aplicarTamano(indice, avisar = false) {
+  const i = Math.min(Math.max(indice, 0), TAMANOS.length - 1);
+  document.documentElement.style.fontSize = TAMANOS[i].escala;
+  try { localStorage.setItem(CLAVE_TAMANO, String(i)); } catch { /* sin almacenamiento: solo esta visita */ }
+  $('[data-tamano="-1"]').disabled = i === 0;
+  $('[data-tamano="1"]').disabled = i === TAMANOS.length - 1;
+  if (avisar) toast(`Tamaño del texto: ${TAMANOS[i].nombre}`);
+  return i;
+}
+
+let tamanoActual = (() => {
+  try { return Number(localStorage.getItem(CLAVE_TAMANO) ?? 1); } catch { return 1; }
+})();
+tamanoActual = aplicarTamano(Number.isInteger(tamanoActual) ? tamanoActual : 1);
+$$('[data-tamano]').forEach((b) => b.addEventListener('click', () => {
+  tamanoActual = aplicarTamano(tamanoActual + Number(b.dataset.tamano), true);
+}));
 
 // ---------- Atajos de teclado ----------
 
 document.addEventListener('keydown', (e) => {
-  if ($('#vista-app').hidden || modal.open) return;
+  if ($('#vista-app').hidden || modal.open || modalAyuda.open) return;
   const escribiendo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
   if (e.key === 'Escape' && escribiendo) {
     document.activeElement.blur();
@@ -938,6 +1061,9 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === 'n' || e.key === 'N') {
     e.preventDefault();
     inputRapido.focus();
+  } else if (e.key === '?') {
+    e.preventDefault();
+    abrirAyuda();
   }
 });
 

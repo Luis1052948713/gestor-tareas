@@ -90,7 +90,9 @@ button { font: inherit; color: inherit; }
 .btn.peligro { color: var(--peligro); }
 .btn.peligro:hover { background: var(--peligro-suave); }
 .btn.ancho { width: 100%; padding: 0.7rem; }
-.icono-btn { padding: 0.45rem; color: var(--texto-suave); font-size: 1.15rem; line-height: 1; }
+/* Área táctil mínima de 44 px (WCAG 2.5.5 y ley de Fitts) */
+.icono-btn { padding: 0.45rem; min-width: 2.75rem; min-height: 2.75rem; color: var(--texto-suave); font-size: 1.15rem; line-height: 1; }
+.icono-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .icono-btn:hover { background: var(--primario-suave); color: var(--primario); }
 .icono-btn.peligro:hover { background: var(--peligro-suave); color: var(--peligro); }
 .enlace { background: none; border: none; color: var(--primario); font-weight: 600; cursor: pointer; padding: 0; }
@@ -221,7 +223,7 @@ kbd {
 
 .contenido {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: 15rem minmax(0, 1fr);
   gap: 2rem;
   max-width: 1120px;
   margin: 0 auto;
@@ -330,8 +332,8 @@ kbd {
 .chip-fecha.hoy { color: var(--aviso); background: var(--aviso-suave); border-color: transparent; }
 .chip-fecha.pronto { color: var(--pronto); background: var(--pronto-suave); border-color: transparent; }
 
-.acciones-tarea { display: flex; gap: 0.1rem; opacity: 0.55; transition: opacity 0.15s; }
-.tarea:hover .acciones-tarea, .tarea:focus-within .acciones-tarea { opacity: 1; }
+/* Siempre visibles y con buen contraste: no hay que adivinar dónde están */
+.acciones-tarea { display: flex; gap: 0.1rem; }
 
 .tarea.completada { background: var(--superficie-2); box-shadow: none; }
 .tarea.completada .check { background: var(--ok); border-color: var(--ok); color: #fff; }
@@ -439,7 +441,91 @@ dialog .form { padding: 1.4rem 1.5rem 1.5rem; }
   .beneficios { display: none; }
 }
 
+/* ---------- Mejoras de usabilidad ---------- */
+
+/* Enlace para saltar al contenido con el teclado */
+.saltar {
+  position: absolute; left: 1rem; top: -4rem; z-index: 30;
+  background: var(--primario); color: #fff; padding: 0.7rem 1.1rem; border-radius: 9px; font-weight: 600;
+  transition: top 0.15s;
+}
+.saltar:focus { top: 1rem; }
+.principal:focus { outline: none; }
+
+/* Barra superior: tamaño de texto y ayuda */
+.herramientas-barra { display: flex; align-items: center; gap: 0.5rem; }
+.tamano-texto { display: flex; border: 1px solid var(--borde); border-radius: 10px; overflow: hidden; }
+.tamano-texto .icono-btn { border-radius: 0; font-size: 0.95rem; font-weight: 700; color: var(--texto); }
+.tamano-texto .icono-btn + .icono-btn { border-left: 1px solid var(--borde); }
+.btn-ayuda span { display: inline-grid; place-items: center; width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--primario); color: #fff; font-size: 0.8rem; }
+
+/* Requisitos del registro, revisados mientras se escribe */
+.requisitos { list-style: none; margin: -0.3rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.88rem; color: var(--texto-suave); }
+.requisitos li { display: flex; align-items: center; gap: 0.5rem; }
+.requisitos li::before {
+  content: ""; width: 1.05rem; height: 1.05rem; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid var(--borde); background: var(--superficie);
+}
+.requisitos li.ok { color: var(--ok); font-weight: 600; }
+.requisitos li.ok::before {
+  border-color: var(--ok); background: var(--ok) center / 70% no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.requisitos li.falta { color: var(--peligro); font-weight: 600; }
+.requisitos li.falta::before { border-color: var(--peligro); }
+.form input[aria-invalid="true"] { border-color: var(--peligro); }
+
+/* Aviso de tareas vencidas */
+.aviso-vencidas {
+  display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem;
+  background: var(--peligro-suave); border: 1px solid color-mix(in srgb, var(--peligro) 35%, transparent);
+  color: var(--texto); border-radius: var(--radio); padding: 0.7rem 0.8rem 0.7rem 1rem;
+}
+.aviso-vencidas > .icono { color: var(--peligro); font-size: 1.3rem; }
+.aviso-vencidas p { flex: 1; }
+.aviso-vencidas .btn { background: var(--superficie); border-color: color-mix(in srgb, var(--peligro) 40%, transparent); color: var(--peligro); }
+.aviso-vencidas .btn:hover { background: var(--peligro); color: #fff; }
+
+/* Bienvenida para cuentas nuevas */
+.bienvenida {
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px;
+  padding: 1.8rem; display: flex; flex-direction: column; gap: 1.3rem; box-shadow: var(--sombra);
+}
+.bienvenida h2 { font-size: 1.35rem; }
+.pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.pasos li { display: flex; gap: 0.8rem; align-items: flex-start; background: var(--superficie-2); border-radius: var(--radio); padding: 1rem; }
+.pasos p { color: var(--texto-suave); font-size: 0.92rem; margin-top: 0.2rem; }
+.numero-paso {
+  display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; flex-shrink: 0;
+  background: var(--primario); color: #fff; font-weight: 700;
+}
+.acciones-bienvenida { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+/* Esqueleto de carga */
+.esqueleto .tarea { flex-direction: column; gap: 0.6rem; box-shadow: none; }
+.esqueleto .linea { display: block; height: 0.9rem; width: 60%; border-radius: 6px; background: var(--borde); animation: latido 1.2s ease-in-out infinite; }
+.esqueleto .linea.corta { width: 30%; }
+@keyframes latido { 50% { opacity: 0.45; } }
+
+/* Ventana de ayuda */
+.contenido-ayuda { padding: 1.4rem 1.5rem 1.5rem; }
+.pasos-ayuda { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5; }
+.subtitulo-ayuda { font-size: 1rem; }
+.atajos { border-collapse: collapse; font-size: 0.95rem; }
+.atajos td { padding: 0.35rem 0.8rem 0.35rem 0; vertical-align: middle; }
+.atajos kbd { font-size: 0.85rem; padding: 0.15rem 0.5rem; }
+.nota-ayuda { color: var(--texto-suave); font-size: 0.92rem; background: var(--superficie-2); border-radius: 9px; padding: 0.7rem 0.9rem; }
+
+/* Quien prefiere menos movimiento no ve animaciones */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
 @media (max-width: 760px) {
+  .btn-ayuda { padding: 0.45rem; font-size: 0; gap: 0; }
+  .btn-ayuda span { font-size: 0.85rem; width: 1.6rem; height: 1.6rem; }
+  .pasos { grid-template-columns: 1fr; }
+  .aviso-vencidas { flex-wrap: wrap; }
   .barra { flex-wrap: wrap; gap: 0.6rem 1rem; padding: 0.6rem 1rem; }
   .buscador { order: 3; flex-basis: 100%; max-width: none; }
   .buscador kbd, .usuario .nombre { display: none; }

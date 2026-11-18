@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <a href="#contenido-principal" class="saltar">Saltar al contenido</a>
 
   <!-- ============ Vista de acceso ============ -->
   <main id="vista-auth" class="auth" hidden>
@@ -57,8 +58,12 @@
             <input type="password" name="password" autocomplete="new-password" required minlength="6">
             <button type="button" class="ver-pass" aria-label="Mostrar contraseña">Ver</button>
           </span>
-          <small class="ayuda">Mínimo 6 caracteres</small>
         </label>
+        <ul class="requisitos" id="requisitos-registro" aria-label="Requisitos para crear la cuenta">
+          <li data-req="nombre">Escribe tu nombre</li>
+          <li data-req="email">Un correo con formato válido</li>
+          <li data-req="password">Contraseña de 6 caracteres o más</li>
+        </ul>
         <p class="error" aria-live="polite"></p>
         <button type="submit" class="btn primario ancho">Crear cuenta</button>
         <p class="cambiar">¿Ya tienes cuenta? <button type="button" class="enlace" data-ir="login">Inicia sesión</button></p>
@@ -118,6 +123,15 @@
         <input type="search" id="buscar" placeholder="Buscar tareas…" aria-label="Buscar tareas">
         <kbd>/</kbd>
       </label>
+      <div class="herramientas-barra">
+        <div class="tamano-texto" role="group" aria-label="Tamaño del texto">
+          <button type="button" class="btn icono-btn" data-tamano="-1" title="Texto más pequeño" aria-label="Reducir el tamaño del texto">A−</button>
+          <button type="button" class="btn icono-btn" data-tamano="1" title="Texto más grande" aria-label="Aumentar el tamaño del texto">A+</button>
+        </div>
+        <button type="button" id="btn-ayuda" class="btn suave btn-ayuda" aria-haspopup="dialog" title="Cómo usar la aplicación (tecla ?)">
+          <span aria-hidden="true">?</span> Ayuda
+        </button>
+      </div>
       <div class="usuario">
         <span class="avatar" id="avatar"></span>
         <span class="nombre" id="nombre-usuario"></span>
@@ -134,7 +148,7 @@
         <ul id="lista-categorias" class="menu"></ul>
       </nav>
 
-      <main class="principal">
+      <main class="principal" id="contenido-principal" tabindex="-1">
         <div class="encabezado">
           <div>
             <h1 id="titulo-vista">Todas las tareas</h1>
@@ -145,6 +159,8 @@
             <span id="porcentaje"></span>
           </div>
         </div>
+
+        <div id="aviso-vencidas" class="aviso-vencidas" role="alert" hidden></div>
 
         <form id="form-rapido" class="rapido" autocomplete="off">
           <span class="icono" data-icono="mas"></span>
@@ -199,6 +215,34 @@
         <button type="submit" class="btn primario">Guardar</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- ============ Ayuda ============ -->
+  <dialog id="modal-ayuda" aria-labelledby="titulo-ayuda">
+    <div class="form contenido-ayuda">
+      <div class="modal-cabecera">
+        <h2 id="titulo-ayuda">¿Cómo funciona?</h2>
+        <button type="button" class="btn icono-btn" data-cerrar-ayuda aria-label="Cerrar la ayuda">&times;</button>
+      </div>
+      <ol class="pasos-ayuda">
+        <li><b>Agrega</b> una tarea escribiéndola en la barra de arriba y presionando Enter.</li>
+        <li><b>Organízala</b> con “Más detalles”: elige su categoría y su fecha con un clic.</li>
+        <li><b>Márcala</b> con el círculo cuando la termines. Si te equivocas, pulsa “Deshacer”.</li>
+        <li><b>Encuéntrala</b> con las vistas Hoy, Próximos 7 días y Vencidas, o con el buscador.</li>
+      </ol>
+      <h3 class="subtitulo-ayuda">Atajos de teclado</h3>
+      <table class="atajos">
+        <tr><td><kbd>N</kbd></td><td>Escribir una tarea nueva</td></tr>
+        <tr><td><kbd>/</kbd></td><td>Buscar</td></tr>
+        <tr><td><kbd>?</kbd></td><td>Abrir esta ayuda</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Cerrar una ventana o salir de un campo</td></tr>
+      </table>
+      <p class="nota-ayuda">¿Te cuesta leer? Usa los botones <b>A−</b> y <b>A+</b> de la barra superior para cambiar el tamaño del texto.</p>
+      <div class="acciones">
+        <span class="espacio"></span>
+        <button type="button" class="btn primario" data-cerrar-ayuda>Entendido</button>
+      </div>
+    </div>
   </dialog>
 
   <!-- Notificaciones -->
